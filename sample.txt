@@ -1,1 +1,0 @@
-Enterprise RAG systems improve retrieval quality by using embeddings and vector search.

@@ -26,3 +26,9 @@ logs/
 
 # Temporary files related to notebooks
 .ipynb_checkpoints/
+
+# Ignored sample files and test scripts
+test_groq.py
+sample.pdf
+sample.txt
+uploads/sample.pdf
