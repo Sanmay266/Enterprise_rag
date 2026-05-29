@@ -1,18 +1,26 @@
 from pathlib import Path
 
-from fastapi import APIRouter
-from fastapi import UploadFile
-from fastapi import File
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+)
 
 from app.ingestion.pipelines.ingestion_pipeline import (
     IngestionPipeline,
+)
+
+from app.storage.sqlite.document_repository import (
+    DocumentRepository,
 )
 
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
 
-Path(UPLOAD_DIR).mkdir(
+Path(
+    UPLOAD_DIR
+).mkdir(
     exist_ok=True
 )
 
@@ -42,7 +50,19 @@ async def ingest_document(
         str(file_path)
     )
 
+    repository = DocumentRepository()
+
+    repository.add_document(
+        filename=file.filename,
+        chunk_count=result[
+            "chunks_created"
+        ],
+        status="indexed",
+    )
+
     return {
-        "message": "Document ingested successfully",
+        "message": (
+            "Document ingested successfully"
+        ),
         "result": result,
     }

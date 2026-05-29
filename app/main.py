@@ -15,6 +15,9 @@ from app.api.routes.ingest import (
     router as ingest_router
 )
 
+from app.api.routes.documents import (
+    router as documents_router
+)
 
 
 settings = get_settings()
@@ -37,6 +40,10 @@ app.include_router(
     ingest_router
 )
 
+
+app.include_router(
+    documents_router
+)
 
 
 @app.get("/")
