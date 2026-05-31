@@ -2,11 +2,14 @@ from typing import List, Dict
 
 from app.retrieval.retriever import Retriever
 
+from app.retrieval.reranking.reranker import (
+    Reranker,
+)
 from app.llm.providers.groq_provider import (
     GroqProvider,
 )
 
-
+self.reranker = Reranker()
 class RAGService:
 
     def __init__(self):
