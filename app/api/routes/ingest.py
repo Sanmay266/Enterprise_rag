@@ -44,25 +44,23 @@ async def ingest_document(
 
         buffer.write(content)
 
+    repository = DocumentRepository()
+
+    document_id = repository.add_document(
+        filename=file.filename,
+        chunk_count=0,
+        status="processing",
+    )
+
     pipeline = IngestionPipeline()
 
     result = pipeline.ingest(
-        str(file_path)
-    )
-
-    repository = DocumentRepository()
-
-    repository.add_document(
-        filename=file.filename,
-        chunk_count=result[
-            "chunks_created"
-        ],
-        status="indexed",
+        str(file_path),
+        document_id=document_id,
     )
 
     return {
-        "message": (
-            "Document ingested successfully"
-        ),
+        "message": "Document ingested successfully",
+        "document_id": document_id,
         "result": result,
     }

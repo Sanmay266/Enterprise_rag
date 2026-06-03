@@ -11,6 +11,10 @@ from app.ingestion.embeddings.embedder import Embedder
 
 from app.storage.qdrant.vector_store import QdrantVectorStore
 
+from app.storage.sqlite.document_repository import (
+    DocumentRepository,
+)
+
 
 class IngestionPipeline:
 
@@ -24,6 +28,8 @@ class IngestionPipeline:
         self.embedder = Embedder()
 
         self.vector_store = QdrantVectorStore()
+
+        self.repository = DocumentRepository()
 
     def load_document(self, file_path: str):
 
@@ -40,7 +46,11 @@ class IngestionPipeline:
                 f"Unsupported file type: {extension}"
             )
 
-    def ingest(self, file_path: str):
+    def ingest(
+        self,
+        file_path: str,
+        document_id: int,
+    ):
 
         # Load document
         document = self.load_document(file_path)
@@ -54,6 +64,15 @@ class IngestionPipeline:
 
         # Chunk document
         chunks = self.chunker.chunk(document)
+
+        # Store chunks in SQLite
+        for chunk in chunks:
+
+            self.repository.add_chunk(
+                document_id=document_id,
+                chunk_id=chunk.metadata["chunk_id"],
+                content=chunk.content,
+            )
 
         # Generate embeddings
         embeddings = self.embedder.embed_chunks(
