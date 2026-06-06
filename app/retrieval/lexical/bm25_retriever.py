@@ -1,39 +1,90 @@
-﻿from typing import List, Dict, Any
-from rank_bm25 import BM25Okapi
+﻿from rank_bm25 import BM25Okapi
+
+from app.storage.sqlite.document_repository import (
+    DocumentRepository,
+)
+
 
 class BM25Retriever:
+
+    # BM25 retrieval over the SQLite chunk registry.
+
     def __init__(self):
-        self.bm25 = None
+
+        self.repository = DocumentRepository()
+
+        chunks = self.repository.get_all_chunks()
+
         self.documents = []
+
         self.metadata = []
 
-    def _tokenize(self, text: str) -> List[str]:
-        if not isinstance(text, str):
-            text = str(text)
-        return text.lower().split()
+        for chunk in chunks:
 
-    def fit(self, documents: List[str], metadata: List[Dict[str, Any]]) -> None:
-        self.documents = documents
-        self.metadata = metadata
-        
-        tokenized_corpus = [self._tokenize(doc) for doc in self.documents]
-        self.bm25 = BM25Okapi(tokenized_corpus)
+            self.documents.append(
+                chunk[3]
+            )
 
-    def search(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
-        if not self.bm25:
+            self.metadata.append(
+                {
+                    "document_id": chunk[1],
+                    "chunk_id": chunk[2],
+                }
+            )
+
+        tokenized_docs = [
+            doc.lower().split()
+            for doc in self.documents
+        ]
+
+        if tokenized_docs:
+
+            self.bm25 = BM25Okapi(
+                tokenized_docs
+            )
+
+        else:
+
+            self.bm25 = None
+
+    def search(
+        self,
+        query: str,
+        limit: int = 5,
+    ):
+
+        if self.bm25 is None:
+
             return []
-            
-        tokenized_query = self._tokenize(query)
-        scores = self.bm25.get_scores(tokenized_query)
-        
+
+        tokenized_query = (
+            query.lower().split()
+        )
+
+        scores = self.bm25.get_scores(
+            tokenized_query
+        )
+
+        ranked = sorted(
+            zip(
+                scores,
+                self.documents,
+                self.metadata,
+            ),
+            key=lambda x: x[0],
+            reverse=True,
+        )
+
         results = []
-        for i, score in enumerate(scores):
-            if score > 0:
-                results.append({
+
+        for score, doc, meta in ranked[:limit]:
+
+            results.append(
+                {
                     "score": float(score),
-                    "content": self.documents[i],
-                    "metadata": self.metadata[i]
-                })
-                
-        results = sorted(results, key=lambda x: x["score"], reverse=True)
-        return results[:limit]
+                    "content": doc,
+                    "metadata": meta,
+                }
+            )
+
+        return results

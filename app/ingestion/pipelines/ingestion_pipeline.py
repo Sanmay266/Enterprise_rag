@@ -65,8 +65,15 @@ class IngestionPipeline:
         # Chunk document
         chunks = self.chunker.chunk(document)
 
-        # Store chunks in SQLite
+        # Store chunks in SQLite 
+        print("TOTAL CHUNKS CREATED:", len(chunks))
+
         for chunk in chunks:
+            print(
+                  "Saving chunk:",
+                  chunk.metadata["chunk_id"] 
+            )
+      
 
             self.repository.add_chunk(
                 document_id=document_id,

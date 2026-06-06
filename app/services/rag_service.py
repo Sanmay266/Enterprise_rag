@@ -5,16 +5,19 @@ from app.retrieval.retriever import Retriever
 from app.retrieval.reranking.reranker import (
     Reranker,
 )
+
 from app.llm.providers.groq_provider import (
     GroqProvider,
 )
 
-self.reranker = Reranker()
+
 class RAGService:
 
     def __init__(self):
 
         self.retriever = Retriever()
+
+        self.reranker = Reranker()
 
         self.llm = GroqProvider()
 
@@ -24,10 +27,20 @@ class RAGService:
         limit: int = 3,
     ) -> List[Dict]:
 
+        # Step 1: Retrieve more chunks from Qdrant
         results = self.retriever.search(
             query=question,
-            limit=limit,
+            limit=10,
         )
+
+        # Step 2: Rerank retrieved chunks
+        results = self.reranker.rerank(
+            query=question,
+            results=results,
+        )
+
+        # Step 3: Keep only best chunks
+        results = results[:limit]
 
         return results
 
@@ -73,6 +86,7 @@ Use ONLY the provided context to answer.
 
 If the answer cannot be found in the context,
 respond with:
+
 "I could not find the answer in the provided documents."
 
 -----------------------------
